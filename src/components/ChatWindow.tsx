@@ -1,7 +1,7 @@
 // app/components/ChatWindow.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,10 +18,25 @@ interface ChatWindowProps {
 
 export default function ChatWindow({ userId }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { text: "Hello! How can I assist you today with Odido?", isBot: true, timestamp: new Date().toLocaleTimeString() },
+    {
+      text: "Hello! How can I assist you today?",
+      isBot: true,
+      timestamp: "09:00:00", // Static initial timestamp for server render
+    },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update initial timestamp on client-side after mount
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.isBot && msg.text === "Hello! How can I assist you today with Odido?"
+          ? { ...msg, timestamp: new Date().toLocaleTimeString() }
+          : msg
+      )
+    );
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -55,7 +70,7 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
   };
 
   return (
-    <div className="flex flex-col h-[500px] w-full max-w-md border rounded-lg shadow-lg bg-white">
+    <div className="flex flex-col w-full max-w-md border rounded-lg shadow-lg bg-white">
       <ScrollArea className="flex-1 p-4">
         {messages.map((msg, idx) => (
           <div
