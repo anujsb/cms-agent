@@ -4,9 +4,13 @@ import { UserRepository } from "@/lib/repositories/userRepository";
 
 const userRepository = new UserRepository();
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest) {
   try {
-    const userId = params.id;
+    const userId = request.nextUrl.pathname.split("/").pop(); // Extract the ID from the URL
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    }
+
     const user = await userRepository.getUserById(userId);
     
     if (!user) {
