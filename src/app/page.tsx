@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Phone, Calendar, Package } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import TopIssuesSummary from "@/components/TopIssuesSummary";
 
 interface User {
   id: string;
@@ -127,7 +128,7 @@ export default function Home() {
                         )}
                       </div>
                     </div>
-
+                    <TopIssuesSummary userId={selectedUser} />
                     <Tabs defaultValue="orders">
                       <TabsList className="grid grid-cols-2 mb-2">
                         <TabsTrigger value="orders">Orders</TabsTrigger>
