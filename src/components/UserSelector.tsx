@@ -1,110 +1,7 @@
-// // // app/components/UserSelector.tsx
-// // "use client";
-
-// // import { useState } from "react";
-// // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// // import { users } from "@/lib/data";
-
-// // interface UserSelectorProps {
-// //   onUserChange: (userId: string) => void;
-// // }
-
-// // export default function UserSelector({ onUserChange }: UserSelectorProps) {
-// //   const [selectedUser, setSelectedUser] = useState(users[0].id);
-
-// //   const handleChange = (value: string) => {
-// //     setSelectedUser(value);
-// //     onUserChange(value);
-// //   };
-
-// //   return (
-// //     <Select value={selectedUser} onValueChange={handleChange}>
-// //       <SelectTrigger className="w-[180px]">
-// //         <SelectValue placeholder="Select a user" />
-// //       </SelectTrigger>
-// //       <SelectContent>
-// //         {users.map((user) => (
-// //           <SelectItem key={user.id} value={user.id}>
-// //             {user.name}
-// //           </SelectItem>
-// //         ))}
-// //       </SelectContent>
-// //     </Select>
-// //   );
-// // }
-
-// // app/components/UserSelector.tsx
-// "use client";
-
-// import { useState, useEffect } from "react";
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// interface User {
-//   id: string;
-//   name: string;
-// }
-
-// interface UserSelectorProps {
-//   onUserChange: (userId: string) => void;
-// }
-
-// export default function UserSelector({ onUserChange }: UserSelectorProps) {
-//   const [users, setUsers] = useState<User[]>([]);
-//   const [selectedUser, setSelectedUser] = useState<string>("");
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     async function fetchUsers() {
-//       try {
-//         const response = await fetch('/api/users');
-//         const data = await response.json();
-//         setUsers(data);
-        
-//         if (data.length > 0) {
-//           setSelectedUser(data[0].id);
-//           onUserChange(data[0].id);
-//         }
-        
-//         setLoading(false);
-//       } catch (error) {
-//         console.error('Failed to fetch users:', error);
-//         setLoading(false);
-//       }
-//     }
-    
-//     fetchUsers();
-//   }, [onUserChange]);
-
-//   const handleChange = (value: string) => {
-//     setSelectedUser(value);
-//     onUserChange(value);
-//   };
-
-//   if (loading) {
-//     return <div>Loading users...</div>;
-//   }
-
-//   return (
-//     <Select value={selectedUser} onValueChange={handleChange}>
-//       <SelectTrigger className="w-[180px]">
-//         <SelectValue placeholder="Select a user" />
-//       </SelectTrigger>
-//       <SelectContent>
-//         {users.map((user) => (
-//           <SelectItem key={user.id} value={user.id}>
-//             {user.name}
-//           </SelectItem>
-//         ))}
-//       </SelectContent>
-//     </Select>
-//   );
-// }
-
-
 // app/components/UserSelector.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -122,7 +19,9 @@ export default function UserSelector({ onUserChange }: UserSelectorProps) {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
+  // Use useEffect with empty dependency array to fetch users only once
   useEffect(() => {
     async function fetchUsers() {
       setLoading(true);
@@ -139,8 +38,12 @@ export default function UserSelector({ onUserChange }: UserSelectorProps) {
         
         if (Array.isArray(data) && data.length > 0) {
           setUsers(data);
-          setSelectedUser(data[0].id);
-          onUserChange(data[0].id);
+          // Only set selected user and call onUserChange on initial load
+          if (initialLoad) {
+            setSelectedUser(data[0].id);
+            onUserChange(data[0].id);
+            setInitialLoad(false);
+          }
         } else {
           setUsers([]);
           setError("No users available");
@@ -155,12 +58,14 @@ export default function UserSelector({ onUserChange }: UserSelectorProps) {
     }
     
     fetchUsers();
-  }, [onUserChange]);
+  }, []); // Remove onUserChange from dependency array
 
-  const handleChange = (value: string) => {
+  // Create a stable handler function that doesn't change on re-renders
+  const handleChange = useCallback((value: string) => {
+    console.log("Selected user:", value); // Debugging
     setSelectedUser(value);
     onUserChange(value);
-  };
+  }, [onUserChange]);
 
   if (loading) {
     return <Skeleton className="h-10 w-[180px]" />;

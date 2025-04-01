@@ -36,36 +36,36 @@ export const incidents = pgTable('incidents', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// Example data for users
-const usersData = [
-  {
-    externalId: "uuid-1234", // Add externalId
-    name: "John Doe",
-    phoneNumber: "0612345678",
-    createdAt: new Date(), // Optional, defaults to now
-  },
-];
+// // Example data for users
+// const usersData = [
+//   {
+//     externalId: "uuid-1234", // Add externalId
+//     name: "John Doe",
+//     phoneNumber: "0612345678",
+//     createdAt: new Date(), // Optional, defaults to now
+//   },
+// ];
 
-// Example data for orders
-const ordersData = [
-  {
-    orderId: "order-1234", // Add orderId
-    userId: 1, // Reference to a user
-    date: new Date(), // Add date
-    plan: "Unlimited 5G",
-    status: "Active", // Must match the enum
-    createdAt: new Date(), // Optional, defaults to now
-  },
-];
+// // Example data for orders
+// const ordersData = [
+//   {
+//     orderId: "order-1234", // Add orderId
+//     userId: 1, // Reference to a user
+//     date: new Date(), // Add date
+//     plan: "Unlimited 5G",
+//     status: "Active", // Must match the enum
+//     createdAt: new Date(), // Optional, defaults to now
+//   },
+// ];
 
-// Example data for incidents
-const incidentsData = [
-  {
-    incidentId: "incident-1234", // Add incidentId
-    userId: 1, // Reference to a user
-    date: new Date(), // Add date
-    description: "No network coverage in Amsterdam",
-    status: "Resolved", // Must match the enum
-    createdAt: new Date(), // Optional, defaults to now
-  },
-];
+// // Example data for incidents
+// const incidentsData = [
+//   {
+//     incidentId: "incident-1234", // Add incidentId
+//     userId: 1, // Reference to a user
+//     date: new Date(), // Add date
+//     description: "No network coverage in Amsterdam",
+//     status: "Resolved", // Must match the enum
+//     createdAt: new Date(), // Optional, defaults to now
+//   },
+// ];
