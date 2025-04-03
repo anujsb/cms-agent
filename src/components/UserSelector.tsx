@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserCircle2, AlertCircle, Users, Search } from "lucide-react";
 
 interface User {
   id: string;
@@ -58,47 +59,71 @@ export default function UserSelector({ onUserChange }: UserSelectorProps) {
     }
     
     fetchUsers();
-  }, []); // Remove onUserChange from dependency array
+  }, []); // Empty dependency array to run only once
 
   // Create a stable handler function that doesn't change on re-renders
   const handleChange = useCallback((value: string) => {
-    console.log("Selected user:", value); // Debugging
     setSelectedUser(value);
     onUserChange(value);
   }, [onUserChange]);
 
   if (loading) {
-    return <Skeleton className="h-10 w-[180px]" />;
+    return (
+      <div className="relative">
+        <Skeleton className="h-10 w-full rounded-md" />
+        <div className="absolute top-2 left-4">
+          <Skeleton className="h-5 w-24" />
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="text-sm text-red-500 p-2 border border-red-200 rounded bg-red-50">
-        {error}
+      <div className="flex items-center gap-2 p-3 border border-red-200 rounded-md bg-red-50 text-red-700 shadow-sm">
+        <AlertCircle size={16} className="flex-shrink-0" />
+        <p className="text-sm font-medium">{error}</p>
       </div>
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="text-sm text-gray-500 p-2 border border-gray-200 rounded bg-gray-50">
-        No users available
+      <div className="flex items-center gap-2 p-3 border border-gray-200 rounded-md bg-gray-50 text-gray-500 shadow-sm">
+        <Users size={16} className="flex-shrink-0" />
+        <p className="text-sm font-medium">No users available</p>
       </div>
     );
   }
 
   return (
-    <Select value={selectedUser} onValueChange={handleChange}>
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select a customer" />
-      </SelectTrigger>
-      <SelectContent>
-        {users.map((user) => (
-          <SelectItem key={user.id} value={user.id}>
-            {user.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="relative">
+      <Select value={selectedUser} onValueChange={handleChange}>
+        <SelectTrigger className="w-full bg-white border-gray-300 hover:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 pl-9">
+          <SelectValue placeholder="Select a customer" />
+        </SelectTrigger>
+        <SelectContent className="max-h-60">
+          <div className="p-2 bg-gray-50 border-b flex items-center">
+            <Search size={14} className="text-gray-500 mr-2" />
+            <span className="text-sm text-gray-600 font-medium">Customer List</span>
+          </div>
+          {users.map((user) => (
+            <SelectItem 
+              key={user.id} 
+              value={user.id}
+              className="hover:bg-blue-50 focus:bg-blue-50 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <UserCircle2 size={16} className="text-blue-600" />
+                <span>{user.name}</span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
+        <UserCircle2 size={16} />
+      </div>
+    </div>
   );
 }
