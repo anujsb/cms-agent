@@ -66,7 +66,7 @@ interface Message {
   isOrderConfirmation?: boolean;
   orderId?: string;
   showOrderSelector?: boolean; // Add this field
-  suggestedProduct?: string; // Add this field
+  suggestedProduct?: string | null; // Allow null as well
 }
 
 interface ChatWindowProps {
