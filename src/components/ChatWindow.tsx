@@ -235,22 +235,47 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
   };
   const handleQuickOrder = (product: string, plan: string) => {
     setPendingOrder({ product, plan });
-    setShowTermsModal(true); // Show the Terms modal
+
+    // Add a message to the chat with Accept and Decline buttons
+    setMessages((prev) => [
+      ...prev,
+      {
+        text: `Please review the terms and conditions for the ${product} with the ${plan} plan. Do you accept?`,
+        isBot: true,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        showOrderSelector: false,
+      },
+    ]);
   };
 
   const handleAcceptTerms = async () => {
     if (pendingOrder) {
       const { product, plan } = pendingOrder;
-      setShowTermsModal(false);
       setPendingOrder(null);
+
       // Proceed with order submission
       await handleInlinePlanSelection(product, plan);
     }
   };
 
   const handleDeclineTerms = () => {
-    setShowTermsModal(false);
     setPendingOrder(null);
+
+    // Add a message to the chat indicating the user declined
+    setMessages((prev) => [
+      ...prev,
+      {
+        text: "You have declined the terms and conditions. Let us know if you need further assistance.",
+        isBot: true,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
   };
 
   const handleCallSupport = () => {
@@ -710,6 +735,26 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
                           </div>
                         </div>
                       )} */}
+                    {msg.text.includes("Do you accept?") && (
+                      <div className="mt-3 flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+                          onClick={handleAcceptTerms}
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                          onClick={handleDeclineTerms}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
