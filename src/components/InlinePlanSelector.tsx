@@ -49,6 +49,7 @@ export default function InlinePlanSelector({ onPlanSelected, initialProduct }: I
       { id: "Unlimited", name: "Unlimited", price: "€40/mo", feature: "150+ sports" },
       { id: "Family", name: "Family", price: "€50/mo", feature: "200+ channels" }
     ]
+    
   };
 
   return (
@@ -97,11 +98,11 @@ export default function InlinePlanSelector({ onPlanSelected, initialProduct }: I
                 <Button 
                   size="sm"
                   disabled={!selectedPlan}
-                  onClick={() => onPlanSelected(product, selectedPlan!)}
+                  onClick={() => onPlanSelected(selectedProduct, selectedPlan!)}
                   className="bg-blue-600 hover:bg-blue-700 text-xs h-8"
                 >
                   <ShoppingCart size={12} className="mr-1" />
-                  Order {product} {selectedPlan || ''}
+                  Order {selectedProduct} {selectedPlan || ""}
                 </Button>
               </div>
             </TabsContent>

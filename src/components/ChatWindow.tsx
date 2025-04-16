@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import InlinePlanSelector from "./InlinePlanSelector";
+import { Modal } from "@/components/ui/Modal";
 
 // Add CSS for compact lists
 const compactListStyles = `
@@ -89,6 +90,8 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
   const [recentOrderId, setRecentOrderId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [pendingOrder, setPendingOrder] = useState<{ product: string; plan: string } | null>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -230,67 +233,24 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
       }
     }
   };
-  const handleQuickOrder = async (product: string, plan: string) => {
-    const confirmMessage = `Confirm order: Yes, product: ${product}, plan: ${plan}`;
-    setInput(confirmMessage);
+  const handleQuickOrder = (product: string, plan: string) => {
+    setPendingOrder({ product, plan });
+    setShowTermsModal(true); // Show the Terms modal
+  };
 
-    // Add the user's message to the chat
-    const userMessage = {
-      text: confirmMessage,
-      isBot: false,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsLoading(true);
-
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: confirmMessage, userId }),
-      });
-
-      const data = await res.json();
-
-      const botMessage = {
-        text: data.reply,
-        isBot: true,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        isOrderConfirmation: data.orderPlaced,
-        orderId: data.orderId,
-      };
-
-      if (data.orderPlaced && data.orderId) {
-        setRecentOrderId(data.orderId);
-      }
-
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: "Sorry, I'm having trouble connecting to the server. Please try again later or contact our support team directly.",
-          isBot: true,
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
+  const handleAcceptTerms = async () => {
+    if (pendingOrder) {
+      const { product, plan } = pendingOrder;
+      setShowTermsModal(false);
+      setPendingOrder(null);
+      // Proceed with order submission
+      await handleInlinePlanSelection(product, plan);
     }
+  };
+
+  const handleDeclineTerms = () => {
+    setShowTermsModal(false);
+    setPendingOrder(null);
   };
 
   const handleCallSupport = () => {
@@ -420,6 +380,29 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
 
   return (
     <>
+      {/* Terms and Conditions Modal */}
+      {showTermsModal && (
+        <Modal onClose={handleDeclineTerms}>
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-2">General Terms and Conditions</h3>
+            <p className="text-sm mb-4">
+              1. By clicking "Accept," I agree to the summary, General Terms and Conditions, the promotional and additional conditions, the current rates, and the creation of a payment obligation.
+            </p>
+            <p className="text-sm mb-4">
+              2. I give permission to check and analyze the status of my internet line and, if necessary, free up other services.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={handleDeclineTerms}>
+                Decline
+              </Button>
+              <Button className="bg-blue-600 text-white" onClick={handleAcceptTerms}>
+                Accept
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Add the style tag for compact lists */}
       <style jsx global>
         {compactListStyles}
@@ -687,12 +670,13 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
                       )} */}
                     {msg.isBot && msg.showOrderSelector && (
                       <InlinePlanSelector
-                        onPlanSelected={handleInlinePlanSelection}
+                      onPlanSelected={handleQuickOrder}
+                        // onPlanSelected={handleInlinePlanSelection}
                         initialProduct={msg.suggestedProduct || undefined}
                       />
                     )}
                     {/* Quick order buttons for messages with order intent */}
-                    {msg.isBot &&
+                    {/* {msg.isBot &&
                       hasOrderRequest(msg.text) &&
                       !needsOrderConfirmation(msg.text) &&
                       !msg.showOrderSelector && (
@@ -725,7 +709,7 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
                             </Button>
                           </div>
                         </div>
-                      )}
+                      )} */}
                   </div>
                 </div>
               ))}
