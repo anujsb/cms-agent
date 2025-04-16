@@ -1,6 +1,6 @@
 // lib/repositories/userRepository.ts
 import { db } from '../db';
-import { users, orders, incidents, invoices } from '../schema';
+import { users, orders, incidents, invoices, products } from '../schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -114,14 +114,32 @@ export class UserRepository {
     await db.insert(users).values({
       externalId,
       name,
-      email, // Added email field
+      email,
       phoneNumber,
     });
     return externalId;
   }
 
+  // Get product by name or create if it doesn't exist
+  async getOrCreateProduct(productName: string, price: string = "0.00") {
+    // Try to find the product first
+    const productResults = await db.select().from(products).where(eq(products.productName, productName));
+    
+    if (productResults.length > 0) {
+      return productResults[0].id;
+    }
+    
+    // If product doesn't exist, create it
+    const result = await db.insert(products).values({
+      productName,
+      price,
+    }).returning({ id: products.id });
+    
+    return result[0].id;
+  }
+
   // Add an order for a user
-  async addOrder(userId: string, productName:string, plan: string, status: 'Active' | 'Expired' | 'Pending', inServiceDate: Date, outServiceDate?: Date) {
+  async addOrder(userId: string, productName: string, plan: string, status: 'Active' | 'Expired' | 'Pending', inServiceDate: Date, outServiceDate?: Date) {
     // Get the internal user ID
     const userResults = await db.select().from(users).where(eq(users.externalId, userId));
     
@@ -129,13 +147,16 @@ export class UserRepository {
       throw new Error('User not found');
     }
     
+    // Get or create the product
+    const productId = await this.getOrCreateProduct(productName);
     const orderId = `ORD${Math.floor(1000 + Math.random() * 9000)}`;
     
     await db.insert(orders).values({
       orderId,
       userId: userResults[0].id,
+      productId,
       productName,
-      date: new Date(), // Add the required 'date' field
+      date: new Date(),
       inServiceDate,
       outServiceDate: outServiceDate || null,
       plan,
