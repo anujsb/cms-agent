@@ -1,6 +1,6 @@
 // lib/repositories/userRepository.ts
 import { db } from '../db';
-import { users, orders, incidents } from '../schema';
+import { users, orders, incidents, invoices } from '../schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -10,7 +10,9 @@ export interface UserWithDetails {
   phoneNumber: string;
   orders: {
     orderId: string;
-    date: string;
+    productName: string;
+    inServiceDate: string;
+    outServiceDate: string | null; // Nullable if not set
     plan: string;
     status: string;
   }[];
@@ -19,6 +21,13 @@ export interface UserWithDetails {
     date: string;
     description: string;
     status: string;
+  }[];
+  invoices: {
+    id: number;
+    periodStartDate: string;
+    periodEndDate: string;
+    price: string;
+    adjustment: string | null;
   }[];
 }
 
@@ -46,7 +55,9 @@ export class UserRepository {
     // Get the user's orders
     const userOrders = await db.select({
       orderId: orders.orderId,
-      date: orders.date,
+      productName: orders.productName,
+      inServiceDate: orders.inServiceDate,
+      outServiceDate: orders.outServiceDate,
       plan: orders.plan,
       status: orders.status,
     }).from(orders).where(eq(orders.userId, user.id));
@@ -59,15 +70,31 @@ export class UserRepository {
       status: incidents.status,
     }).from(incidents).where(eq(incidents.userId, user.id));
     
+    // Get the user's invoices
+    const userInvoices = await db.select({
+      id: invoices.id,
+      periodStartDate: invoices.periodStartDate,
+      periodEndDate: invoices.periodEndDate,
+      price: invoices.price,
+      adjustment: invoices.adjustment,
+    }).from(invoices).where(eq(invoices.userId, user.id));
+    
     // Format dates for frontend display
     const formattedOrders = userOrders.map(order => ({
       ...order,
-      date: new Date(order.date).toISOString().split('T')[0]
+      inServiceDate: order.inServiceDate ? new Date(order.inServiceDate).toISOString().split('T')[0] : '',
+      outServiceDate: order.outServiceDate ? new Date(order.outServiceDate).toISOString().split('T')[0] : null,
     }));
     
     const formattedIncidents = userIncidents.map(incident => ({
       ...incident,
       date: new Date(incident.date).toISOString().split('T')[0]
+    }));
+    
+    const formattedInvoices = userInvoices.map(invoice => ({
+      ...invoice,
+      periodStartDate: new Date(invoice.periodStartDate).toISOString().split('T')[0],
+      periodEndDate: new Date(invoice.periodEndDate).toISOString().split('T')[0]
     }));
     
     // Return the user with their orders and incidents
@@ -77,22 +104,24 @@ export class UserRepository {
       phoneNumber: user.phoneNumber,
       orders: formattedOrders,
       incidents: formattedIncidents,
+      invoices: formattedInvoices,
     };
   }
 
   // Create a new user
-  async createUser(name: string, phoneNumber: string) {
+  async createUser(name: string, email: string, phoneNumber: string) {
     const externalId = uuidv4();
     await db.insert(users).values({
       externalId,
       name,
+      email, // Added email field
       phoneNumber,
     });
     return externalId;
   }
 
   // Add an order for a user
-  async addOrder(userId: string, plan: string, status: 'Active' | 'Expired' | 'Pending') {
+  async addOrder(userId: string, productName:string, plan: string, status: 'Active' | 'Expired' | 'Pending', inServiceDate: Date, outServiceDate?: Date) {
     // Get the internal user ID
     const userResults = await db.select().from(users).where(eq(users.externalId, userId));
     
@@ -105,7 +134,10 @@ export class UserRepository {
     await db.insert(orders).values({
       orderId,
       userId: userResults[0].id,
-      date: new Date(),
+      productName,
+      date: new Date(), // Add the required 'date' field
+      inServiceDate,
+      outServiceDate: outServiceDate || null,
       plan,
       status,
     });

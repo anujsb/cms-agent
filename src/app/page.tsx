@@ -26,7 +26,9 @@ interface User {
   phoneNumber: string;
   orders: {
     orderId: string;
-    date: string;
+    productName: string;
+    inServiceDate: string;
+    outServiceDate: string | null;
     plan: string;
     status: string;
   }[];
@@ -95,14 +97,14 @@ export default function Home() {
           <p className="text-gray-500">Manage customer interactions and support tickets efficiently</p>
         </header>
         
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-2">
           {/* Sidebar */}
-          <div className="w-full md:w-1/3">
+          <div className="w-full md:w-1/3 border-r border-gray-300 pr-4">
             <Card className="shadow-lg border-gray-200 rounded-xl mb-6 overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4">
                 <CardTitle className="flex items-center">
                   <UserCircle2 className="mr-2" size={20} />
-                  <span>Customer Profile</span>
+                  <span>Customer Care Agent.</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
@@ -142,13 +144,18 @@ export default function Home() {
                           <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                             <div className="flex justify-between items-center">
                               <span className="font-medium text-gray-800">
-                                {user.orders.find(o => o.status === "Active")?.plan}
+                                {user.orders.find(o => o.status === "Active")?.productName}
                               </span>
                               <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">Active</Badge>
                             </div>
                             <div className="flex items-center mt-2 text-sm text-gray-600">
                               <Calendar size={14} className="mr-1 text-blue-600" />
-                              <span>Since {user.orders.find(o => o.status === "Active")?.date}</span>
+                              <span>
+                                From {user.orders.find(o => o.status === "Active")?.inServiceDate} 
+                                {user.orders.find(o => o.status === "Active")?.outServiceDate 
+                                  ? ` to ${user.orders.find(o => o.status === "Active")?.outServiceDate}` 
+                                  : ""}
+                              </span>
                             </div>
                           </div>
                         ) : (
@@ -178,15 +185,19 @@ export default function Home() {
                           user.orders.map(order => (
                             <div key={order.orderId} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                               <div className="flex justify-between items-center">
-                                <span className="font-semibold text-gray-800">{order.plan}</span>
+                                <span className="font-semibold text-gray-800">{order.productName}</span>
                                 <Badge className={`${getStatusColor(order.status)} border`}>{order.status}</Badge>
                               </div>
-                              <div className="flex items-center mt-2 text-sm text-gray-600">
+                              <div className="flex items-center mt-2 text-xs text-gray-600">
                                 <Package size={14} className="mr-2 text-blue-600" />
                                 <span className="mr-2">{order.orderId}</span>
                                 <span className="text-gray-400">•</span>
                                 <Calendar size={14} className="mx-2 text-blue-600" />
-                                <span>{order.date}</span>
+                                <span>
+                                  {/* From */}
+                                   {order.inServiceDate} 
+                                  {order.outServiceDate ? ` to ${order.outServiceDate}` : ""}
+                                </span>
                               </div>
                             </div>
                           ))
@@ -210,7 +221,7 @@ export default function Home() {
                                 </span>
                                 <Badge className={`${getStatusColor(incident.status)} border whitespace-nowrap ml-2`}>{incident.status}</Badge>
                               </div>
-                              <div className="flex items-center mt-2 text-sm text-gray-600">
+                              <div className="flex items-center mt-2 text-xs text-gray-600">
                                 <History size={14} className="mr-2 text-blue-600" />
                                 <span className="mr-2">{incident.incidentId}</span>
                                 <span className="text-gray-400">•</span>
@@ -243,7 +254,7 @@ export default function Home() {
           </div>
 
           {/* Chat Window */}
-          <div className="w-full md:w-2/3">
+          <div className="w-full md:w-2/3 pl-2">
             {selectedUser ? (
               <ChatWindow userId={selectedUser} />
             ) : (
