@@ -189,11 +189,7 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
 
       const data = await res.json();
 
-      // Check if message has order intent
-      const hasOrderIntent =
-        /(?:order|buy|purchase|subscribe|sign up|get a new)/i.test(input);
-      const details = extractOrderDetails(input);
-
+      // Check if the backend indicates an order intent
       const botMessage = {
         text: data.reply,
         isBot: true,
@@ -203,9 +199,8 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
         }),
         isOrderConfirmation: data.orderPlaced,
         orderId: data.orderId,
-        // Show order selector if message has order intent and bot isn't already confirming an order
-        showOrderSelector: hasOrderIntent && !data.orderPlaced,
-        suggestedProduct: details.product,
+        showOrderSelector: data.isOrderIntent || false, // Only show selector if order intent is detected
+        suggestedProduct: data.productName || null,
       };
 
       if (data.orderPlaced && data.orderId) {
