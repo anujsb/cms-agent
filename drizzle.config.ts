@@ -9,6 +9,6 @@ export default defineConfig({
   schema: "./src/lib/schema.ts",
   out: "./drizzle",
   dbCredentials: {
-    url: process.env.NEXT_PUBLIC_DATABASE_URL!, // Ensure this environment variable is set
+    url: process.env.NEXT_PUBLIC_DATABASE_URL!, // Ensure this is set in .env.local
   },
 });
