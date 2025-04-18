@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner"
 import {
   Card,
   CardHeader,
@@ -91,7 +92,10 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [pendingOrder, setPendingOrder] = useState<{ product: string; plan: string } | null>(null);
+  const [pendingOrder, setPendingOrder] = useState<{
+    product: string;
+    plan: string;
+  } | null>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -250,12 +254,17 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
     if (pendingOrder) {
       const { product, plan } = pendingOrder;
       setPendingOrder(null);
-
+  
       // Proceed with order submission
       await handleInlinePlanSelection(product, plan);
+      
+      // Show success toast after order is processed
+      toast("Order placed successfully"
+        // description: `Your order for ${product} with ${plan} plan has been placed.`,
+        // variant: "default",
+      );
     }
   };
-
   const handleDeclineTerms = () => {
     setPendingOrder(null);
 
@@ -404,18 +413,26 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
       {showTermsModal && (
         <Modal onClose={handleDeclineTerms}>
           <div className="p-4">
-            <h3 className="text-lg font-semibold mb-2">General Terms and Conditions</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              General Terms and Conditions
+            </h3>
             <p className="text-sm mb-4">
-              1. By clicking "Accept," I agree to the summary, General Terms and Conditions, the promotional and additional conditions, the current rates, and the creation of a payment obligation.
+              1. By clicking "Accept," I agree to the summary, General Terms and
+              Conditions, the promotional and additional conditions, the current
+              rates, and the creation of a payment obligation.
             </p>
             <p className="text-sm mb-4">
-              2. I give permission to check and analyze the status of my internet line and, if necessary, free up other services.
+              2. I give permission to check and analyze the status of my
+              internet line and, if necessary, free up other services.
             </p>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={handleDeclineTerms}>
                 Decline
               </Button>
-              <Button className="bg-blue-600 text-white" onClick={handleAcceptTerms}>
+              <Button
+                className="bg-blue-600 text-white"
+                onClick={handleAcceptTerms}
+              >
                 Accept
               </Button>
             </div>
@@ -691,9 +708,10 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
                     {msg.isBot && msg.showOrderSelector && (
                       <InlinePlanSelector
                       onPlanSelected={handleQuickOrder}
-                        // onPlanSelected={handleInlinePlanSelection}
-                        initialProduct={msg.suggestedProduct || undefined}
-                      />
+                      initialProduct={msg.suggestedProduct || undefined}
+                      userId={userId}
+                      showToast={false} // Add this prop to prevent toast in the component
+                    />
                     )}
                     {/* Quick order buttons for messages with order intent */}
                     {/* {msg.isBot &&
