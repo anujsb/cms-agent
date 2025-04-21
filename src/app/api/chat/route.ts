@@ -8,8 +8,8 @@ const userRepository = new UserRepository();
 
 // Helper function to detect order intent
 function detectOrderIntent(message: string): { isOrderIntent: boolean; productName?: string; plan?: string } {
-  const orderKeywords = ["order", "buy", "purchase", "subscribe", "sign up", "get a new"];
-  const queryKeywords = ["recent order", "old orders", "order history", "previous orders", "all orders", "past orders", "show", "latest", "last", "previous"];
+  const orderKeywords = ["place order", "buy", "purchase", "subscribe", "sign up", "get a new"];
+  const queryKeywords = ["recent order", "old orders", "order history", "previous orders", "all orders", "past orders", "show", "latest", "last", "previous", "order details"];
 
   // Check if the message is asking about existing orders
   const isQueryAboutOrders = queryKeywords.some(keyword =>
