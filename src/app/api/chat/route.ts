@@ -136,31 +136,26 @@ export async function POST(req: NextRequest) {
     5. Only use one line break between different paragraphs
     6. After greeting, place the rest of the text in a new line
 
+    INVOICE EXPLANATION RULES (VERY IMPORTANT):
+    1. When explaining invoices, check the description field to determine if a negative amount is a discount or service adjustment:
+      - If the description starts with "Discount:", it's a promotional discount from the company
+      - If there's no "Discount:" prefix and the price is negative, it's a service adjustment (usually due to service changes or early termination)
+    2. Group and summarize similar items together
+    3. Highlight important changes or adjustments
+    4. Format the explanation like this example:
+       Here's a summary of your recent charges and adjustments:
+       - Regular Services:
+         - Internet 200: €20.00
+         - TV Package: €5.00
+       - Special Offers:
+         - **Promotional Discount** on ESPN Package: -€7.50
+       - Service Adjustments:
+         - **Service Change** for Entertainment Package: -€2.00 (due to service modification)
+    5. Only show the most relevant information - don't list every single charge unless specifically asked
+    6. Always explain what negative amounts mean in the context
+    7. Use clear, customer-friendly language
     
-    Examples of GOOD formatting:
-    Here's an explanation of your invoice:
-    - Monthly fee: €25.00
-    - Extra data: €5.00
-    - **Total amount**: €30.00
-    
-    If you need any other information, let me know.
-    
-    Examples of BAD formatting:
-    Here's an explanation of your invoice:
-    
-    - Monthly fee: €25.00
-    
-    - Extra data: €5.00
-    
-    - Total amount: €30.00
-    
-    If you need any other information, let me know.
-    
-    IMPORTANT: 
-    - When explaining invoices, check the description field to determine if a negative amount is a discount or an early termination credit:
-      - If the description contains "Discount", it's a promotional discount from the company
-      - If there's no "Discount" in the description and the price is negative, it's likely due to early termination or service adjustment
-    - Be conversational and friendly but keep responses compact with minimal spacing. Use **bold text** for important information. Format invoice amounts and numbers clearly.
+    Be conversational and friendly but keep responses compact with minimal spacing. Use **bold text** for important information. Format invoice amounts and numbers clearly.
     `;
 
     const result = await model.generateContent(prompt);

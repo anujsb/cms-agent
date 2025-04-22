@@ -235,6 +235,7 @@ export interface UserWithDetails {
     periodStartDate: string;
     periodEndDate: string;
     price: string;
+    description: string;
     adjustment: string | null;
   }[];
 }
@@ -347,6 +348,7 @@ export class UserRepository {
         periodStartDate: invoices.periodStartDate,
         periodEndDate: invoices.periodEndDate,
         price: invoices.price,
+        description: invoices.description,
         adjustment: sql<string>`CASE WHEN ${invoices.price} < 0 THEN ${invoices.price}::text ELSE NULL END`,
       })
       .from(invoices)
@@ -375,7 +377,8 @@ export class UserRepository {
       ...invoice,
       periodStartDate: invoice.periodStartDate ? new Date(invoice.periodStartDate).toISOString().split('T')[0] : '',
       periodEndDate: invoice.periodEndDate ? new Date(invoice.periodEndDate).toISOString().split('T')[0] : '',
-      price: invoice.price || '' // Ensure price is always a string
+      price: invoice.price || '', // Ensure price is always a string
+      description: invoice.description || '' // Ensure description is always a string
     }));
     
     // Return the user with their orders, incidents, and invoices
