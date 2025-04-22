@@ -216,11 +216,13 @@ export interface UserWithDetails {
   phoneNumber: string;
   orders: {
     orderId: string;
+    orderProductId: string;
     productName: string;
     inServiceDate: string;
     outServiceDate: string | null;
     plan: string;
     status: string;
+    createDate: string;
   }[];
   incidents: {
     incidentId: string;
@@ -284,16 +286,23 @@ export class UserRepository {
     // Get the user's orders from orderProducts table
     const userOrders = await db
       .select({
-        orderId: orderProducts.orderProductId,
+        orderId: sql<string>`CAST(${orders.orderId} AS TEXT)`,
+        orderProductId: orderProducts.orderProductId,
         productName: sql<string>`COALESCE(${productTypes.type}, '')`,
         inServiceDate: orderProducts.inServiceDt,
         outServiceDate: orderProducts.outServiceDt,
         status: orders.status,
+        createDate: orders.createDate,
       })
       .from(orderProducts)
       .leftJoin(orders, eq(orderProducts.orderId, orders.orderId))
       .leftJoin(productTypes, eq(orderProducts.productTypeId, productTypes.productTypeId))
-      .where(eq(orders.customerId, externalId));
+      .where(
+        and(
+          eq(orders.customerId, externalId),
+          sql`${orders.orderId} IS NOT NULL`
+        )
+      );
     
     // Get plan info from orderProductParameters
     const planParameters = await db
@@ -347,12 +356,14 @@ export class UserRepository {
     const formattedOrders = userOrders.map(order => ({
       ...order,
       // Get plan from map or use default value
-      plan: planMap.get(order.orderId) || 'Standard',
+      plan: planMap.get(order.orderProductId) || 'Standard',
       // Format dates
       inServiceDate: order.inServiceDate ? new Date(order.inServiceDate).toISOString().split('T')[0] : '',
       outServiceDate: order.outServiceDate ? new Date(order.outServiceDate).toISOString().split('T')[0] : null,
       // Map status values from new schema to expected values
       status: this.mapOrderStatus(order.status || ''),
+      // Format create date
+      createDate: order.createDate ? new Date(order.createDate).toISOString().split('T')[0] : '',
     }));
     
     const formattedIncidents = userIncidents.map(incident => ({

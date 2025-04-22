@@ -15,10 +15,18 @@ import {
   LayoutGrid,
   History,
   BarChart3,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import TopIssuesSummary from "@/components/TopIssuesSummary";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface User {
   id: string;
@@ -26,11 +34,13 @@ interface User {
   phoneNumber: string;
   orders: {
     orderId: string;
+    orderProductId: string;
     productName: string;
     inServiceDate: string;
     outServiceDate: string | null;
     plan: string;
     status: string;
+    createDate: string;
   }[];
   incidents: {
     incidentId: string;
@@ -40,10 +50,28 @@ interface User {
   }[];
 }
 
+// New interface for order products
+interface OrderProduct {
+  orderProductId: string;
+  productName: string;
+  inServiceDate: string;
+  outServiceDate: string | null;
+  plan: string;
+}
+
+// New interface for orders with their products
+interface OrderWithProducts {
+  orderId: string;
+  status: string;
+  createDate: string;
+  products: OrderProduct[];
+}
+
 export default function Home() {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ordersWithProducts, setOrdersWithProducts] = useState<OrderWithProducts[]>([]);
 
   useEffect(() => {
     if (!selectedUser) return;
@@ -55,6 +83,35 @@ export default function Home() {
         if (response.ok) {
           const data = await response.json();
           setUser(data);
+          
+          // Process orders to group by orderId
+          if (data.orders && data.orders.length > 0) {
+            const orderMap = new Map<string, OrderWithProducts>();
+            
+            data.orders.forEach((order: any) => {
+              if (!orderMap.has(order.orderId)) {
+                orderMap.set(order.orderId, {
+                  orderId: order.orderId,
+                  status: order.status,
+                  createDate: order.createDate || new Date().toISOString().split('T')[0],
+                  products: []
+                });
+              }
+              
+              const orderWithProducts = orderMap.get(order.orderId)!;
+              orderWithProducts.products.push({
+                orderProductId: order.orderProductId,
+                productName: order.productName,
+                inServiceDate: order.inServiceDate,
+                outServiceDate: order.outServiceDate,
+                plan: order.plan
+              });
+            });
+            
+            setOrdersWithProducts(Array.from(orderMap.values()));
+          } else {
+            setOrdersWithProducts([]);
+          }
         } else {
           console.error("Failed to fetch user details");
           setUser(null);
@@ -227,45 +284,58 @@ export default function Home() {
                       </TabsList>
 
                       <TabsContent value="orders" className="space-y-3 mt-0">
-                        {user.orders.length > 0 ? (
-                          user.orders.map((order) => (
-                            <div
-                              key={order.orderId}
-                              className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
-                            >
-                              <div className="flex justify-between items-center">
-                                <span className="font-semibold text-gray-800">
-                                  {order.productName}
-                                </span>
-                                <Badge
-                                  className={`${getStatusColor(
-                                    order.status
-                                  )} border`}
-                                >
-                                  {order.status}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center mt-2 text-xs text-gray-600">
-                                <Package
-                                  size={14}
-                                  className="mr-2 text-blue-600"
-                                />
-                                <span className="mr-2">{order.orderId}</span>
-                                <span className="text-gray-400">•</span>
-                                <Calendar
-                                  size={14}
-                                  className="mx-2 text-blue-600"
-                                />
-                                <span>
-                                  {/* From */}
-                                  {order.inServiceDate}
-                                  {order.outServiceDate
-                                    ? ` to ${order.outServiceDate}`
-                                    : ""}
-                                </span>
-                              </div>
-                            </div>
-                          ))
+                        {ordersWithProducts.length > 0 ? (
+                          <Accordion type="single" collapsible className="w-full">
+                            {ordersWithProducts.map((order) => (
+                              <AccordionItem key={order.orderId} value={order.orderId}>
+                                <AccordionTrigger className="hover:no-underline">
+                                  <div className="flex justify-between items-center w-full pr-4">
+                                    <div className="flex flex-col items-start">
+                                      <span className="font-semibold text-gray-800">
+                                        Order ID: {order.orderId}
+                                      </span>
+                                      <span className="text-xs text-gray-500">
+                                        Created: {order.createDate}
+                                      </span>
+                                    </div>
+                                    <Badge className={`${getStatusColor(order.status)} border`}>
+                                      {order.status}
+                                    </Badge>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <div className="space-y-3 pt-2">
+                                    {order.products.map((product) => (
+                                      <div
+                                        key={product.orderProductId}
+                                        className="bg-gray-50 p-3 rounded-lg border border-gray-100"
+                                      >
+                                        <div className="flex justify-between items-center">
+                                          <span className="font-medium text-gray-700">
+                                            {product.productName}
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            ID: {product.orderProductId}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center mt-1 text-xs text-gray-600">
+                                          <Calendar size={14} className="mr-1 text-blue-600" />
+                                          <span>
+                                            {product.inServiceDate}
+                                            {product.outServiceDate
+                                              ? ` to ${product.outServiceDate}`
+                                              : ""}
+                                          </span>
+                                          <span className="mx-2 text-gray-400">•</span>
+                                          <span className="text-gray-600">Plan: {product.plan}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            ))}
+                          </Accordion>
                         ) : (
                           <div className="bg-white p-6 rounded-xl border border-gray-100 text-center">
                             <Package
