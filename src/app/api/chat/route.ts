@@ -146,13 +146,13 @@ export async function POST(req: NextRequest) {
       - Credit for Stopped Services (negative amounts without "Discount:" prefix)
     3. Format the explanation like this example:
        Here's a simple breakdown of your bill:
-       - Your Monthly Services:
-         - Internet: €20.00
-         - TV Package: €5.00
-       - Special Offers & Discounts:
-         - **Savings** on ESPN Package: -€7.50 (special offer discount)
-       - Credit for Stopped Services:
-         - **Money Back** for Entertainment Package: -€2.00 (credit because you stopped this service early)
+        - **Your Monthly Services:**
+        Internet: €20.00
+        TV Package: €5.00
+        - **Special Offers & Discounts:**
+        **Savings** on ESPN Package: -€7.50 (special offer discount)
+        - **Credit for Stopped Services:**
+        **Money Back** for Entertainment Package: -€2.00 (credit because you stopped this service early)
     4. Use simple, everyday language:
       - Say "savings" or "discount" instead of "promotional discount"
       - Say "money back" or "credit" instead of "service adjustment"
