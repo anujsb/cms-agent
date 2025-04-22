@@ -157,7 +157,9 @@ export async function POST(req: NextRequest) {
     If you need any other information, let me know.
     
     IMPORTANT: 
-    - If there are any credits or adjustments in the invoice, most of the time the credit is applied because the user stopped using the plan early, mention that explicitly.
+    - When explaining invoices, check the description field to determine if a negative amount is a discount or an early termination credit:
+      - If the description contains "Discount", it's a promotional discount from the company
+      - If there's no "Discount" in the description and the price is negative, it's likely due to early termination or service adjustment
     - Be conversational and friendly but keep responses compact with minimal spacing. Use **bold text** for important information. Format invoice amounts and numbers clearly.
     `;
 
