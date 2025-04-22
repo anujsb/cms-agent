@@ -69,6 +69,7 @@ interface Message {
   orderId?: string;
   showOrderSelector?: boolean; // Add this field
   suggestedProduct?: string | null; // Allow null as well
+  showCallButton?: boolean; // Add this field to indicate when to show the call button
 }
 
 interface ChatWindowProps {
@@ -193,6 +194,9 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
 
       const data = await res.json();
 
+      // Check if the user is asking for customer care
+      const userAskingForCare = isAskingForCustomerCare(input);
+
       // Check if the backend indicates an order intent
       const botMessage = {
         text: data.reply,
@@ -205,6 +209,7 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
         orderId: data.orderId,
         showOrderSelector: data.isOrderIntent || false, // Only show selector if order intent is detected
         suggestedProduct: data.productName || null,
+        showCallButton: userAskingForCare || needsRealCustomerCare(data.reply), // Show call button if user is asking for care or bot indicates need for real person
       };
 
       if (data.orderPlaced && data.orderId) {
@@ -222,6 +227,7 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
             hour: "2-digit",
             minute: "2-digit",
           }),
+          showCallButton: true, // Show call button on error
         },
       ]);
     } finally {
@@ -283,7 +289,33 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
   };
 
   const handleCallSupport = () => {
-    alert("Calling Odido Customer Support... (This is a mock action)");
+    // Show a toast notification
+    toast("Connecting to customer support...", {
+      description: "You will be connected to a customer service representative shortly.",
+      duration: 3000,
+    });
+    
+    // Add a message to the chat indicating the call is being initiated
+    setMessages((prev) => [
+      ...prev,
+      {
+        text: "Connecting to customer support...",
+        isBot: true,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
+    
+    // In a real application, this would initiate a call or redirect to a support page
+    // For now, we'll just simulate a connection after a delay
+    setTimeout(() => {
+      toast("Connected to customer support", {
+        description: "You are now speaking with a customer service representative.",
+        duration: 3000,
+      });
+    }, 2000);
   };
 
   const handleReset = () => {
@@ -333,6 +365,44 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
     return (
       text.includes("To confirm your order") &&
       text.includes("please reply with")
+    );
+  };
+
+  // Function to check if a real customer care person is needed
+  const needsRealCustomerCare = (text: string) => {
+    return (
+      text.includes("real person") ||
+      text.includes("human agent") ||
+      text.includes("customer service representative") ||
+      text.includes("speak to someone") ||
+      text.includes("talk to someone") ||
+      text.includes("connect with an agent") ||
+      text.includes("transfer to an agent") ||
+      text.includes("escalate") ||
+      text.includes("complex issue") ||
+      text.includes("complicated problem") ||
+      text.includes("technical support") ||
+      text.includes("billing department") ||
+      text.includes("account specialist")
+    );
+  };
+
+  // Function to check if user is asking for a customer care person
+  const isAskingForCustomerCare = (text: string) => {
+    return (
+      text.includes("customer care") ||
+      text.includes("customer service") ||
+      text.includes("support agent") ||
+      text.includes("help desk") ||
+      text.includes("call center") ||
+      text.includes("contact support") ||
+      text.includes("get help") ||
+      text.includes("speak to someone") ||
+      text.includes("talk to someone") ||
+      text.includes("human") ||
+      text.includes("agent") ||
+      text.includes("representative") ||
+      text.includes("operator")
     );
   };
 
@@ -629,7 +699,9 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
                     )}
                     {/* Call support button for Call Now messages */}
                     {msg.isBot &&
-                      msg.text.includes("Would you like to call now?") && (
+                      (msg.text.includes("Would you like to call now?") ||
+                       needsRealCustomerCare(msg.text) ||
+                       msg.showCallButton) && (
                         <div className="mt-3 flex">
                           <Button
                             variant="outline"
@@ -638,7 +710,7 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
                             onClick={handleCallSupport}
                           >
                             <Phone size={14} className="mr-2" />
-                            Call Now
+                            Call Customer Care
                           </Button>
                         </div>
                       )}
@@ -671,40 +743,6 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
                           </Button>
                         </div>
                       )}
-                    {/* Quick order buttons for messages with order intent */}
-                    {/* {msg.isBot &&
-                      hasOrderRequest(msg.text) &&
-                      !needsOrderConfirmation(msg.text) && (
-                        <div className="mt-3">
-                          <div className="text-xs text-gray-500 mb-2">
-                            Quick Order Options:
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
-                              onClick={() =>
-                                handleQuickOrder("SIM", "Unlimited")
-                              }
-                            >
-                              <ShoppingCart size={14} className="mr-2" />
-                              SIM Unlimited
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
-                              onClick={() =>
-                                handleQuickOrder("Internet", "Premium")
-                              }
-                            >
-                              <ShoppingCart size={14} className="mr-2" />
-                              Internet Premium
-                            </Button>
-                          </div>
-                        </div>
-                      )} */}
                     {msg.isBot && msg.showOrderSelector && (
                       <InlinePlanSelector
                       onPlanSelected={handleQuickOrder}
@@ -716,8 +754,7 @@ export default function ChatWindow({ userId }: ChatWindowProps) {
                     {/* Quick order buttons for messages with order intent */}
                     {/* {msg.isBot &&
                       hasOrderRequest(msg.text) &&
-                      !needsOrderConfirmation(msg.text) &&
-                      !msg.showOrderSelector && (
+                      !needsOrderConfirmation(msg.text) && (
                         <div className="mt-3">
                           <div className="text-xs text-gray-500 mb-2">
                             Quick Order Options:
