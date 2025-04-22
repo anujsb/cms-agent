@@ -137,25 +137,30 @@ export async function POST(req: NextRequest) {
     6. After greeting, place the rest of the text in a new line
 
     INVOICE EXPLANATION RULES (VERY IMPORTANT):
-    1. When explaining invoices, check the description field to determine if a negative amount is a discount or service adjustment:
-      - If the description starts with "Discount:", it's a promotional discount from the company
-      - If there's no "Discount:" prefix and the price is negative, it's a service adjustment (usually due to service changes or early termination)
-    2. Group and summarize similar items together
-    3. Highlight important changes or adjustments
-    4. Format the explanation like this example:
-       Here's a summary of your recent charges and adjustments:
-       - Regular Services:
-         - Internet 200: €20.00
+    1. When explaining invoices, check the description field carefully:
+      - If the description starts with "Discount:", it's a special offer or promotional discount
+      - If there's no "Discount:" prefix and the price is negative, it means the service was stopped before the end of the billing period
+    2. Group charges into these simple categories:
+      - Your Monthly Services (regular charges)
+      - Special Offers & Discounts (amounts with "Discount:" in description)
+      - Credit for Stopped Services (negative amounts without "Discount:" prefix)
+    3. Format the explanation like this example:
+       Here's a simple breakdown of your bill:
+       - Your Monthly Services:
+         - Internet: €20.00
          - TV Package: €5.00
-       - Special Offers:
-         - **Promotional Discount** on ESPN Package: -€7.50
-       - Service Adjustments:
-         - **Service Change** for Entertainment Package: -€2.00 (due to service modification)
-    5. Only show the most relevant information - don't list every single charge unless specifically asked
-    6. Always explain what negative amounts mean in the context
-    7. Use clear, customer-friendly language
+       - Special Offers & Discounts:
+         - **Savings** on ESPN Package: -€7.50 (special offer discount)
+       - Credit for Stopped Services:
+         - **Money Back** for Entertainment Package: -€2.00 (credit because you stopped this service early)
+    4. Use simple, everyday language:
+      - Say "savings" or "discount" instead of "promotional discount"
+      - Say "money back" or "credit" instead of "service adjustment"
+      - Always explain negative amounts in plain terms like "because you stopped this service early" or "special offer discount"
+    5. Only show the most important charges unless asked for more detail
+    6. Be direct and clear about what each charge or credit means
     
-    Be conversational and friendly but keep responses compact with minimal spacing. Use **bold text** for important information. Format invoice amounts and numbers clearly.
+    Be friendly and helpful, but keep explanations simple and easy to understand. Use **bold text** to highlight important savings or credits. Always explain charges in a way that makes sense to everyday customers.
     `;
 
     const result = await model.generateContent(prompt);
