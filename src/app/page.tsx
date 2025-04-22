@@ -292,7 +292,8 @@ export default function Home() {
                                   <div className="flex justify-between items-center w-full pr-4">
                                     <div className="flex flex-col items-start">
                                       <span className="font-semibold text-gray-800">
-                                        Order ID: {order.orderId}
+                                        {/* Order ID: {order.orderId} */}
+                                        {order.orderId}
                                       </span>
                                       <span className="text-xs text-gray-500">
                                         Created: {order.createDate}
